@@ -1,16 +1,32 @@
 import matplotlib.pyplot as plt
 import numpy as np
-def plot(h, metodo):
+#Diccionarios para que se vean más bonitas las gráficas
+METODOS = {
+    'euler': 'Euler',
+    'rk4': 'Runge-Kutta 4'
+}
+COLORES = {
+    'euler': 'seagreen',
+    'rk4': 'midnightblue'    
+}
+#Gráfica de los métodos
+def grafica(h, metodo):
     t, yn, y, error = np.loadtxt(f'{metodo}_h{h}.dat', unpack=True)
+    #Asignar los diccionarios a las variables
+    metodo_n = METODOS.get(metodo, metodo)
+    colors = COLORES.get(metodo, 'red')
     #Solución
     plt.figure(figsize=(12,5))
     plt.subplot(1,2,1)
     plt.plot(t, y, 'k-', label='Solución')
-    plt.plot(t, yn, 'r--', label=f'{metodo}')
+    plt.plot(t, yn, linestyle='--', color=colors, label=metodo_n)
+    plt.xlabel('t')
+    plt.ylabel('y(t)')
+    plt.title(f'Solución (h={h})')
     plt.legend()
     #Error
     plt.subplot(1,2,2)
-    plt.plot(t, error, 'b-', label='Error')
+    plt.plot(t, error, color=colors, label='Error')
     plt.xlabel('t')
     plt.ylabel('Error')
     plt.title(f'Error (h={h})')
@@ -18,36 +34,43 @@ def plot(h, metodo):
     
     plt.tight_layout()
     plt.savefig(f'{metodo}_h{h}-comparar.png')
-    plt.close
-def plot_error_comparison():
+    plt.close()
+    
+#Gráfica de comparación de los errores de cada método
+def comparacion_errores():
     plt.figure(figsize=(10, 6))
     
-    for metodo, color in zip(['euler', 'rk4'], ['red', 'blue']):
-        for h in ['0.1', '0.01']:
-            try:
-                t, _, _, error = np.loadtxt(f'{metodo}_h{h}.dat', unpack=True)
-                plt.plot(t, error, '--' if h == '0.1' else '-', 
-                        color=color, 
-                        label=f'{metodo.upper()} h={h}')
-            except FileNotFoundError:
-                print(f"Warning: Missing data for {metodo} h={h}")
+    h_values = ['0.1', '0.01']
     
-    plt.xlabel('Time (t)')
-    plt.ylabel('Absolute Error')
-    plt.title('Error Comparison Between metodos')
+    for metodo, metodo_n in METODOS.items():
+        color = COLORES[metodo]
+        h_idx = 0
+        while h_idx < len(h_values):
+            h = h_values[h_idx]
+            t, _, _, error = np.loadtxt(f'{metodo}_h{h}.dat', unpack=True)
+            plt.plot(t, error, '--' if h == '0.1' else '-',
+                     color=color,
+                     label=f'{metodo_n} h={h}')
+            h_idx += 1
+    plt.xlabel('t')
+    plt.ylabel('Error')
+    plt.title('Comparación errorres')
+    plt.yscale('log')
     plt.legend()
     plt.grid(True)
-    plt.savefig('error_comparison.png')
+    plt.savefig('comparacion.png')
     plt.close()
 
 if __name__ == "__main__":
-    # Generate individual plots
-    for metodo in ['euler', 'rk4']:
-        for h in ['0.1', '0.01']:
-            plot(h, metodo)
+    #Gráficas separadas
+    h_values = ['0.1', '0.01']
     
-    # Generate comparison plot
-    plot_error_comparison()
-    
-    print("All plots generated successfully!")
+    for metodo_archivo in METODOS.keys():
+        h_idx = 0
+        while h_idx < len(h_values):
+            h = h_values[h_idx]
+            grafica(h, metodo_archivo)
+            h_idx += 1
+    #Gráfica comparación    
+    comparacion_errores()
     
